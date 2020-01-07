@@ -3,8 +3,6 @@
 **obj/
 **packages/
 **.vs/
-**Properties/
-
 
 # Prerequisites
 *.d
