@@ -12,18 +12,19 @@ namespace ConsoleAppClient
 
     class Program
     {
+        public static string HasseIp = "172.16.117.80";
+        public static string OsamaIp = "172.16.118.44";
+        public static string StefanIp = "172.16.117.92";
 
         // Main method 
         static void Main(string[] args)
         {
-           
             // Creating and initializing thread 
             Thread ListenThr = new Thread(listenThread);
             Thread MessageThr = new Thread(MessageThread);
 
             ListenThr.Start();
             MessageThr.Start();
-  
         }
 
         static void listenThread()
@@ -36,7 +37,6 @@ namespace ConsoleAppClient
                 server.Start();
                 Console.WriteLine("Chat started...");
 
-
             }
             catch (Exception ex)
             {
@@ -47,7 +47,6 @@ namespace ConsoleAppClient
             {
                 client = server.AcceptTcpClient();
                 string ip = client.Client.RemoteEndPoint.ToString();
-
 
                 byte[] recievedBuffer = new byte[100];
                 NetworkStream stream = client.GetStream();
@@ -79,15 +78,28 @@ namespace ConsoleAppClient
                 // Blue color from other users
                 Console.ForegroundColor = ConsoleColor.Blue;
 
-                if (ip.Substring(0, 13) == "172.16.117.80")
+                string subname = ip.Substring(0, 13);
+                string chatname = "";
+
+                if (subname == HasseIp)
                 {
-                  
-                    Console.WriteLine(msg.ToString() + " from Hasse");
+                    chatname = "Hasse";
+                    
+                }
+                else if(subname == StefanIp)
+                {
+                    chatname = "Stefan";
+                }
+                else if (subname == OsamaIp)
+                {
+                    chatname = "Osama";
                 }
                 else
                 {
-                    Console.WriteLine(msg.ToString() + " from " + ip);
+                    chatname = subname;
                 }
+
+                Console.WriteLine(msg.ToString() + " from " + chatname);
 
                 // White color when I write
                 Console.ForegroundColor = ConsoleColor.White;
@@ -96,7 +108,7 @@ namespace ConsoleAppClient
 
         static void MessageThread()
         {
-            string serverIP = "172.16.117.80";
+            string serverIP = OsamaIp;
             int port = 8080;
 
             while (true)
