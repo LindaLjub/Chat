@@ -23,28 +23,18 @@ namespace ConsoleAppClient
 
             ListenThr.Start();
             MessageThr.Start();
-            // Console.WriteLine("Main Thread Ends!!");
   
         }
 
-        // Static method 
         static void listenThread()
         {
-            //for (int c = 0; c <= 3; c++)
-            //{
-
-            //    Console.WriteLine("Listen is in progress!!");
-            //    Thread.Sleep(1000);
-            //}
-            //Console.WriteLine("Listen ends!!");
-
-            IPAddress localAddr = IPAddress.Parse("192.168.56.1");
+            IPAddress localAddr = IPAddress.Parse("172.16.117.71");
             TcpListener server = new TcpListener(localAddr, 8080);
             TcpClient client = default(TcpClient);
             try
             {
                 server.Start();
-                Console.WriteLine("Server started...");
+                Console.WriteLine("Chat started...");
 
 
             }
@@ -86,54 +76,66 @@ namespace ConsoleAppClient
                     stream.Write(sendData, 0, sendData.Length);
                     stream.Close();
                 }
+                // Blue color from other users
+                Console.ForegroundColor = ConsoleColor.Blue;
 
-                Console.WriteLine(msg.ToString() + " " + ip);
+                if (ip.Substring(0, 13) == "172.16.117.80")
+                {
+                  
+                    Console.WriteLine(msg.ToString() + " from Hasse");
+                }
+                else
+                {
+                    Console.WriteLine(msg.ToString() + " from " + ip);
+                }
+
+                // White color when I write
+                Console.ForegroundColor = ConsoleColor.White;
             }
         }
 
         static void MessageThread()
         {
-            //for (int c = 0; c <= 3; c++)
-            //{
-
-            //    Console.WriteLine("Message is in progress!!");
-            //    Thread.Sleep(1000);
-            //}
-            //Console.WriteLine("Message ends!!");
-
-            string serverIP = "192.168.56.1";
+            string serverIP = "172.16.117.80";
             int port = 8080;
 
-            while(true)
+            while (true)
             {
                 string message = Console.ReadLine();
 
-                // SEND DATA
-                TcpClient clienta = new TcpClient(serverIP, port);
-                int byteCount = Encoding.ASCII.GetByteCount(message);
+                try
+                {
+                    // SEND DATA
+                    TcpClient clienta = new TcpClient(serverIP, port);
+                    int byteCount = Encoding.ASCII.GetByteCount(message);
 
-                byte[] sendDataa = new byte[byteCount];
+                    byte[] sendDataa = new byte[byteCount];
 
-                sendDataa = Encoding.ASCII.GetBytes(message);
-                NetworkStream stream = clienta.GetStream();
-                stream.Write(sendDataa, 0, sendDataa.Length);
+                    sendDataa = Encoding.ASCII.GetBytes(message);
+                    NetworkStream stream = clienta.GetStream();
+                    stream.Write(sendDataa, 0, sendDataa.Length);
 
-                // RESPONSE
-                // Buffer to store the response bytes.
-                sendDataa = new Byte[256];
+                    // RESPONSE
+                    // Buffer to store the response bytes.
+                    sendDataa = new Byte[256];
 
-                // String to store the response ASCII representation.
-                String responseData = String.Empty;
+                    // String to store the response ASCII representation.
+                    String responseData = String.Empty;
 
-                // Read the first batch of the TcpServer response bytes.
-                Int32 bytes = stream.Read(sendDataa, 0, sendDataa.Length);
-                responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
-                Console.WriteLine(responseData);
+                    // Read the first batch of the TcpServer response bytes.
+                    Int32 bytes = stream.Read(sendDataa, 0, sendDataa.Length);
+                    responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
+                    Console.WriteLine(responseData);
 
-                stream.Close();
-                clienta.Close();
+                    stream.Close();
+                    clienta.Close();
+
+                }
+                catch(Exception)
+                {
+                    Console.WriteLine("Message could not be sent..");
+                }
             }
-           
         }
     }
 }
