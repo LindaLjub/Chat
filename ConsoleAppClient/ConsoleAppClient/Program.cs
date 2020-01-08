@@ -51,7 +51,14 @@ namespace ConsoleAppClient
                 byte[] recievedBuffer = new byte[100];
                 NetworkStream stream = client.GetStream();
 
-                stream.Read(recievedBuffer, 0, recievedBuffer.Length);
+                try
+                {
+                    stream.Read(recievedBuffer, 0, recievedBuffer.Length);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Stream could not be read..");
+                }
 
                 StringBuilder msg = new StringBuilder();
 
@@ -66,6 +73,7 @@ namespace ConsoleAppClient
                         msg.Append(Convert.ToChar(b).ToString());
                     }
                 }
+
                 if (msg.ToString() != "")
                 {
                     int byteCount = Encoding.ASCII.GetByteCount("Message delivered!");
@@ -74,7 +82,9 @@ namespace ConsoleAppClient
                     sendData = Encoding.ASCII.GetBytes("Message delivered!");
                     stream.Write(sendData, 0, sendData.Length);
                     stream.Close();
+                    client.Close();
                 }
+
                 // Blue color from other users
                 Console.ForegroundColor = ConsoleColor.Blue;
 
@@ -108,7 +118,7 @@ namespace ConsoleAppClient
 
         static void MessageThread()
         {
-            string serverIP = OsamaIp;
+            string serverIP = HasseIp;
             int port = 8080;
 
             while (true)
