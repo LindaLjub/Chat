@@ -32,7 +32,6 @@ namespace ConsoleAppClient
 
             ListenThr.Start();
             MessageThr.Start();
-
         }
 
         static void listenThread()
@@ -56,7 +55,7 @@ namespace ConsoleAppClient
                 client = server.AcceptTcpClient();
                 string ip = client.Client.RemoteEndPoint.ToString();
 
-                byte[] recievedBuffer = new byte[200];
+                byte[] recievedBuffer = new byte[400];
                 NetworkStream stream = client.GetStream();
 
                 try
@@ -120,7 +119,7 @@ namespace ConsoleAppClient
                     chatname = subname;
                 }
 
-                Console.WriteLine(msg.ToString() + " from " + chatname);
+                Console.WriteLine(chatname + " said \n" + msg.ToString());
 
                 // White color when I write
                 Console.ForegroundColor = ConsoleColor.White;

@@ -1,10 +1,25 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Net; // dns
 using System.Net.Http; // api
 using Newtonsoft.Json; // json
+using System.Net.Sockets;
+using System.Text; // encoding
+using System.Threading;
 
 namespace ApiProject
 {
+    // protocol
+    class CreateProtocol
+    {
+        public string date { get; set; }
+        public string senderIP { get; set; }
+        public string recipientIP { get; set; }
+        public string nickname { get; set; }
+        public string message { get; set; }
+
+    }
+
     class Program
     {
         // HttpClient is intended to be instantiated once per application, rather than per-use. See Remarks.
@@ -17,49 +32,137 @@ namespace ApiProject
 
         static async Task Main()
         {
-                // Call asynchronous network methods in a try/catch block to handle exceptions.
-                try
-                {
-                    //HttpResponseMessage response = await client.GetAsync(uri);
-                    //response.EnsureSuccessStatusCode();
-                    //string responseBody = await response.Content.ReadAsStringAsync();
+            while(true)
+            {
+                Thread.Sleep(5000);
 
-                    // Above three lines can be replaced with new helper method below
-                    string responseBody = await client.GetStringAsync(uri);
+                // create protocolobject
+                CreateProtocol protocolObject = new CreateProtocol();
 
-                    // parse
-                    dynamic stuff = JsonConvert.DeserializeObject(responseBody);
+                // Fill protocol with data
+                createProtocol(protocolObject);
 
-                    // String description = stuff.contents.jokes[0].description;
-                    // String joke = stuff.contents.jokes[0].joke.text;
-                    // string joke = stuff.value;
-                    // Console.WriteLine(stuff);
-                    // Console.WriteLine("***" + description + "***\n\n" + joke);
+                //// get data from api
+                //await getDataFromApi(protocolObject);
 
-                    // To see if it is a 2 part joke
-                    string type = stuff.type;
+                // make protocol object to JSON
+                string protocol = JsonConvert.SerializeObject(protocolObject);
 
-                    if(type == "twopart")
-                    {
-                        string jokeSetup = stuff.setup;
-                        string jokeDelivery = stuff.delivery;
-                        Console.WriteLine(jokeSetup + "\n" + jokeDelivery);
-                    }
-                    else
-                    {
-                        string joke = stuff.joke;
-                        Console.WriteLine(joke);
-                    }
+               // Console.WriteLine(protocol);
 
-
-                }
-                catch (HttpRequestException e)
-                {
-                    Console.WriteLine("\nException Caught!");
-                    Console.WriteLine("Message :{0} ", e.Message);
-                }
+                // send message
+                MessageThread(protocol);
+            }
         }
 
-       
+        // get data from api
+        static async Task getDataFromApi(CreateProtocol protocolObject)
+        {
+            try
+            {
+                //HttpResponseMessage response = await client.GetAsync(uri);
+                //response.EnsureSuccessStatusCode();
+                //string responseBody = await response.Content.ReadAsStringAsync();
+
+                // Above three lines can be replaced with new helper method below
+                string responseBody = await client.GetStringAsync(uri);
+
+                // parse
+                dynamic stuff = JsonConvert.DeserializeObject(responseBody);
+
+                // To see if it is a 2 part joke
+                string type = stuff.type;
+                string message = "";
+
+                if (type == "twopart")
+                {
+                    string jokeSetup = stuff.setup;
+                    string jokeDelivery = stuff.delivery;
+                    // Console.WriteLine(jokeSetup + "\n" + jokeDelivery);
+
+                    message += stuff.setup;
+                    message += " \n";
+                    message += stuff.delivery;
+
+                }
+                else
+                {
+                    string joke = stuff.joke;
+                    // Console.WriteLine(joke);
+
+                    message += stuff.joke;
+                }
+
+                // create message JSON
+                protocolObject.message = message;
+         
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
+
+        // protocol
+        static void createProtocol(CreateProtocol protocolObject)
+        {
+            // Retrive Date
+            DateTime dateTime = new DateTime();
+            dateTime = DateTime.Now;
+            String S_DateTime = dateTime.ToString();
+
+            // Get IP-ADRESS
+            string hostName = Dns.GetHostName(); // Retrive the Name of HOST  
+            string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
+
+            // create json
+            protocolObject.date = S_DateTime;
+            protocolObject.senderIP = myIP;
+            protocolObject.nickname = "Chatbot";
+            protocolObject.recipientIP = "172.16.117.80";
+
+        }
+
+        // send message
+        static void MessageThread(string protocol)
+        {
+            string serverIP = "172.16.117.80";
+            int port = 8080;
+
+                try
+                {
+                    // SEND DATA
+                    TcpClient clienta = new TcpClient(serverIP, port);
+                    int byteCount = Encoding.ASCII.GetByteCount(protocol);
+
+                    byte[] sendDataa = new byte[byteCount];
+
+                    sendDataa = Encoding.ASCII.GetBytes(protocol);
+                    NetworkStream stream = clienta.GetStream();
+                    stream.Write(sendDataa, 0, sendDataa.Length);
+
+                    // RESPONSE
+                    // Buffer to store the response bytes.
+                    sendDataa = new Byte[256];
+
+                    // String to store the response ASCII representation.
+                    String responseData = String.Empty;
+
+                    // Read the first batch of the TcpServer response bytes.
+                    Int32 bytes = stream.Read(sendDataa, 0, sendDataa.Length);
+                    responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
+                    Console.WriteLine(responseData);
+
+                    // stream.Close();
+                    // clienta.Close();
+                    stream.Flush();
+
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Message could not be sent..");
+                }
+        }
     }
 }
