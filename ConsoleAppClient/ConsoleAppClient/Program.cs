@@ -1,14 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
+using Newtonsoft.Json;
 
 namespace ConsoleAppClient
 {
+    class CreateProtocol
+    {
+        public string date { get; set; }
+        public string senderIP { get; set; }
+        public string recipientIP { get; set; }
+        public string nickname { get; set; }
+        public string message { get; set; }
+
+    }
 
     class Program
     {
@@ -25,6 +32,7 @@ namespace ConsoleAppClient
 
             ListenThr.Start();
             MessageThr.Start();
+
         }
 
         static void listenThread()
@@ -48,7 +56,7 @@ namespace ConsoleAppClient
                 client = server.AcceptTcpClient();
                 string ip = client.Client.RemoteEndPoint.ToString();
 
-                byte[] recievedBuffer = new byte[100];
+                byte[] recievedBuffer = new byte[200];
                 NetworkStream stream = client.GetStream();
 
                 try
@@ -81,9 +89,12 @@ namespace ConsoleAppClient
 
                     sendData = Encoding.ASCII.GetBytes("Message delivered!");
                     stream.Write(sendData, 0, sendData.Length);
+
                     stream.Close();
                     client.Close();
+
                 }
+
 
                 // Blue color from other users
                 Console.ForegroundColor = ConsoleColor.Blue;
@@ -118,22 +129,31 @@ namespace ConsoleAppClient
 
         static void MessageThread()
         {
-            string serverIP = HasseIp;
+            CreateProtocol protocolObject = new CreateProtocol();
+            string serverIP = "172.16.117.71";
             int port = 8080;
 
             while (true)
             {
                 string message = Console.ReadLine();
 
+                // Send with protocol
+                createProtocol(protocolObject);
+
+                // create json
+                protocolObject.recipientIP = serverIP;
+                protocolObject.message = message;
+                string protocol = JsonConvert.SerializeObject(protocolObject);
+
                 try
                 {
                     // SEND DATA
                     TcpClient clienta = new TcpClient(serverIP, port);
-                    int byteCount = Encoding.ASCII.GetByteCount(message);
+                    int byteCount = Encoding.ASCII.GetByteCount(protocol);
 
                     byte[] sendDataa = new byte[byteCount];
 
-                    sendDataa = Encoding.ASCII.GetBytes(message);
+                    sendDataa = Encoding.ASCII.GetBytes(protocol);
                     NetworkStream stream = clienta.GetStream();
                     stream.Write(sendDataa, 0, sendDataa.Length);
 
@@ -158,6 +178,24 @@ namespace ConsoleAppClient
                     Console.WriteLine("Message could not be sent..");
                 }
             }
+        }
+
+        static void createProtocol(CreateProtocol protocolObject)
+        {
+            // Retrive Date
+            DateTime dateTime = new DateTime();
+            dateTime = DateTime.Now;
+            String S_DateTime = dateTime.ToString();
+
+            // Get IP-ADRESS
+            string hostName = Dns.GetHostName(); // Retrive the Name of HOST  
+            string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
+
+            // create json
+            protocolObject.date = S_DateTime;
+            protocolObject.senderIP = myIP;
+            protocolObject.nickname = "Linda";
+
         }
     }
 }
