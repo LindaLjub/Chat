@@ -3,11 +3,22 @@ using System.Text;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
-using Newtonsoft.Json;
+using Newtonsoft.Json; // json
+using MySql.Data.MySqlClient; // For mySql connection
 
 namespace ConsoleAppClient
 {
     class CreateProtocol
+    {
+        public string date { get; set; }
+        public string senderIP { get; set; }
+        public string recipientIP { get; set; }
+        public string nickname { get; set; }
+        public string message { get; set; }
+
+    }
+    // Use in server -> DB
+    class sendInfo
     {
         public string date { get; set; }
         public string senderIP { get; set; }
@@ -89,8 +100,9 @@ namespace ConsoleAppClient
                     sendData = Encoding.ASCII.GetBytes("Message delivered!");
                     stream.Write(sendData, 0, sendData.Length);
 
-                    stream.Close();
-                    client.Close();
+                    // stream.Close();
+                    // client.Close();
+                    stream.Flush();
 
                 }
 
@@ -119,7 +131,11 @@ namespace ConsoleAppClient
                     chatname = subname;
                 }
 
-                Console.WriteLine(chatname + " said \n" + msg.ToString());
+                string message = msg.ToString();
+                Console.WriteLine(chatname + " said \n" + message);
+
+                // send to DB
+                sendToDB(message);
 
                 // White color when I write
                 Console.ForegroundColor = ConsoleColor.White;
@@ -168,8 +184,9 @@ namespace ConsoleAppClient
                     responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
                     Console.WriteLine(responseData);
 
-                    stream.Close();
-                    clienta.Close();
+                    //stream.Close();
+                    //clienta.Close();
+                    stream.Flush();
 
                 }
                 catch(Exception)
@@ -196,5 +213,60 @@ namespace ConsoleAppClient
             protocolObject.nickname = "Linda";
 
         }
+
+        static void sendToDB(string message)
+        {
+            // parse info
+            sendInfo info = JsonConvert.DeserializeObject<sendInfo>(message);
+
+            // connect to DB
+            string server = "localhost";
+            string userid = "root";
+            string password = "Pa55word";
+            string database = "kurs1";
+
+            // connection string
+            string cs = "server=" + server + ";userid=" + userid + ";password=" + password + ";database=" + database;
+
+            // connection, create and open
+            var con = new MySqlConnection(cs);
+            con.Open();
+
+            // try connection
+            Console.WriteLine($"MySql version: {con.ServerVersion}");
+
+            // SQL query string
+            string sql = "INSERT INTO chat_history(date, senderIP, recipientIP, nickname, message) VALUES('" + info.date + "', '" + info.senderIP + "', '" + info.recipientIP + "', '" + info.nickname + "', '" + info.message + "')";
+
+            // command, request with sql query and sql connection. 
+            // cmd = response from db
+            var cmd = new MySqlCommand(sql, con);
+
+            // execute query
+            cmd.BeginExecuteNonQuery();
+
+
+            //// to se data
+            //string sqla = "SELECT *  FROM chat_history";
+
+            //// command, request with sql query and sql connection. 
+            //// cmd = response from db
+            //var cmda = new MySqlCommand(sqla, con);
+
+            //// execute reader
+            //MySqlDataReader reader = cmda.ExecuteReader();
+
+            //// Show data
+            //while (reader.Read())
+            //{
+            //    Console.WriteLine(reader["Id"] + ": " + reader["date"]);
+            //}
+
+            //// close the reader
+            //reader.Close();
+
+        }
+
+
     }
 }
