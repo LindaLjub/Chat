@@ -42,7 +42,10 @@ namespace ConsoleAppClient
             Thread MessageThr = new Thread(MessageThread);
 
             ListenThr.Start();
-            MessageThr.Start();
+            // MessageThr.Start();
+
+            Thread ListenMessage = new Thread(ListenAndMessage);
+            ListenMessage.Start();
         }
 
         static void listenThread()
@@ -135,7 +138,7 @@ namespace ConsoleAppClient
                 Console.WriteLine(chatname + " said \n" + message);
 
                 // send to DB
-                sendToDB(message);
+                // sendToDB(message);
 
                 // White color when I write
                 Console.ForegroundColor = ConsoleColor.White;
@@ -267,6 +270,76 @@ namespace ConsoleAppClient
 
         }
 
+        static void ListenAndMessage()
+        {
+           
+            CreateProtocol protocolObject = new CreateProtocol();
+            string serverIP = "172.16.117.80";
+            int port = 8080;
+
+            // Connect to server
+            try
+            {
+                TcpClient clienta = new TcpClient(serverIP, port);
+                Console.WriteLine("Connected to server");
+
+                // start 2 threads
+
+
+                while (true)
+                {
+                    string message = Console.ReadLine();
+                    Console.Beep();
+
+                    // Send with protocol
+                    createProtocol(protocolObject);
+
+                    // create json
+                    protocolObject.recipientIP = serverIP;
+                    protocolObject.message = message;
+                    string protocol = JsonConvert.SerializeObject(protocolObject);
+
+                    try
+                    {
+                        // SEND DATA
+                        // TcpClient clienta = new TcpClient(serverIP, port);
+                        int byteCount = Encoding.ASCII.GetByteCount(protocol);
+
+                        byte[] sendDataa = new byte[byteCount];
+
+                        sendDataa = Encoding.ASCII.GetBytes(protocol);
+                        NetworkStream stream = clienta.GetStream();
+                        stream.Write(sendDataa, 0, sendDataa.Length);
+
+                        // RESPONSE
+                        // Buffer to store the response bytes.
+                        sendDataa = new Byte[256];
+
+                        // String to store the response ASCII representation.
+                        String responseData = String.Empty;
+
+                        // Read the first batch of the TcpServer response bytes.
+                        Int32 bytes = stream.Read(sendDataa, 0, sendDataa.Length);
+                        responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
+                        Console.WriteLine(responseData);
+
+                        //stream.Close();
+                        //clienta.Close();
+                        stream.Flush();
+
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Message could not be sent..");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Could not connect");
+            }
+
+        }
 
     }
 }

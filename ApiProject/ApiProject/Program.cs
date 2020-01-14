@@ -130,39 +130,39 @@ namespace ApiProject
             string serverIP = "172.16.117.80";
             int port = 8080;
 
-                try
-                {
-                    // SEND DATA
-                    TcpClient clienta = new TcpClient(serverIP, port);
-                    int byteCount = Encoding.ASCII.GetByteCount(protocol);
+            try
+            {
+                // SEND DATA
+                TcpClient clienta = new TcpClient(serverIP, port);
+                int byteCount = Encoding.ASCII.GetByteCount(protocol);
 
-                    byte[] sendDataa = new byte[byteCount];
+                byte[] sendDataa = new byte[byteCount];
 
-                    sendDataa = Encoding.ASCII.GetBytes(protocol);
-                    NetworkStream stream = clienta.GetStream();
-                    stream.Write(sendDataa, 0, sendDataa.Length);
+                sendDataa = Encoding.ASCII.GetBytes(protocol);
+                NetworkStream stream = clienta.GetStream();
+                stream.Write(sendDataa, 0, sendDataa.Length);
 
-                    // RESPONSE
-                    // Buffer to store the response bytes.
-                    sendDataa = new Byte[256];
+                // RESPONSE
+                // Buffer to store the response bytes.
+                sendDataa = new Byte[256];
 
-                    // String to store the response ASCII representation.
-                    String responseData = String.Empty;
+                // String to store the response ASCII representation.
+                String responseData = String.Empty;
 
-                    // Read the first batch of the TcpServer response bytes.
-                    Int32 bytes = stream.Read(sendDataa, 0, sendDataa.Length);
-                    responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
-                    Console.WriteLine(responseData);
+                // Read the first batch of the TcpServer response bytes.
+                Int32 bytes = stream.Read(sendDataa, 0, sendDataa.Length);
+                responseData = System.Text.Encoding.ASCII.GetString(sendDataa, 0, bytes);
+                Console.WriteLine(responseData);
 
-                    // stream.Close();
-                    // clienta.Close();
-                    stream.Flush();
+                // stream.Close();
+                // clienta.Close();
+                stream.Flush();
 
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("Message could not be sent..");
-                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Message could not be sent..");
+            }
         }
     }
 }
